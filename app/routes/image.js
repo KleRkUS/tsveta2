@@ -1,18 +1,32 @@
-const cocoSsd = require('@tensorflow-models/coco-ssd');
-const tf = require('@tensorflow/tfjs');
-const upload = require('../commands/uploadMiddleware');
 const express = require('express');
 const router = express.Router();
+const tf = require("@tensorflow/tfjs");
+const multer  = require('multer');
 
-router.post("/", upload.single('image'), async (req, res) => {
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'public/uploads/')
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.fieldname)
+  }
+});
 
-  const img = req.body.file;
+const upload = multer({ storage: storage });
 
-  const image = new ImageData(img);
+const fs = require('fs');
+const jpeg = require('jpeg-js');
 
-  res.send(image);
-  tf.browser.fromPixels(image).print();
+router.post("/save", upload.fields([{name: 'model.json', maxCount: 1}, {name: 'model.weights.bin', maxCount: 1}]),async (req, res) => {
 
+  res.json("OK");
+
+});
+
+router.get('/load', async (req, res) =>{
+
+  const model = await tf.loadLayersModel('file://uploads/model.json');
+  res.send(model);
 
 });
 
