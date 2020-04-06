@@ -14,9 +14,6 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-const fs = require('fs');
-const jpeg = require('jpeg-js');
-
 router.post("/save", upload.fields([{name: 'model.json', maxCount: 1}, {name: 'model.weights.bin', maxCount: 1}]),async (req, res) => {
 
   res.json("OK");
