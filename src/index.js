@@ -4,6 +4,40 @@ const tf = require('@tensorflow/tfjs');
 
 
 const input = document.getElementById('fileToUpload');
+const radiosMode = document.getElementsByName('mode');
+const radiosTraining = document.getElementsByName('radio_training');
+
+let modelTraining = false;
+
+let trainingData = [[[[
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+]]]];
+
+for (let button of radiosMode) {
+  button.onclick = () => {
+    let mode = button.getAttribute('id');
+    if (mode === 'mode_predict') {
+      modelTraining = false;
+    } else {
+      modelTraining = true;
+    }
+  }
+}
+
+for (let button of radiosTraining) {
+  button.onclick = () => {
+    changeTrainingData(button);
+  }
+}
 
 input.onchange = e => {
 
@@ -89,34 +123,69 @@ async function nn(fr) {
 
   const optimizer = tf.train.sgd(0.1);
 
-  const ys = tf.tensor4d([[[[
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 0, 1, 1, 1, 1,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1
-  ]]]]);
+  const ys = tf.tensor4d(trainingData);
 
   model.compile({
     optimizer: optimizer,
     loss: 'meanSquaredError'
   });
 
-  const his = model.fit(img, ys, {
-    epochs: 1000,
-  }).then(async res => {
-    console.log(res.history.loss);
-    model.predict(img).print();
-    const saveRes = await model.save('http://127.0.0.1:8080/image/save').then((res) => {console.log(res)});
-  });
+  if (modelTraining) {
+
+    console.log(trainingData);
+    const his = model.fit(img, ys, {
+      epochs: 1000,
+    }).then(async res => {
+      console.log(res.history.loss);
+      const saveRes = await model.save('http://127.0.0.1:8080/image/save').then((res) => {
+        console.log(res)
+      });
+    });
+  } else {
+    const prediction = model.predict(img);
+    draw(prediction);
+  }
   });
 
 
   //const saveRes = await model.save('file:///model').then((res) => {console.log(res)});
+  });
+}
+
+function changeTrainingData(elem) {
+  const elemId = elem.getAttribute('data-id');
+  const rowId = elem.parentElement.getAttribute('data-id');
+  const num = String(rowId)+String(elemId);
+  let res;
+
+  if (elem.checked) {
+    res = 1;
+  } else {
+    res = 0;
+  }
+
+  trainingData[0][0][0][Number(num)] = res;
+  return;
+}
+
+function draw(prediction) {
+  const outCanvas = document.getElementById('outCanvas');
+  prediction.array().then(res => {
+    let image = res[0][0][0];
+    image = image.map((e) => Math.round(e));
+    console.log(image);
+    let ctx = outCanvas.getContext('2d');
+    for (let num = 0; num < image.length; num++) {
+      ctx.beginPath();
+      let color;
+      if (image[num] === 1) {
+        ctx.fillStyle = '#000000';
+      } else {
+        ctx.fillStyle = '#ffffff';
+      }
+      ctx.fillRect((num % 10)*30, parseInt(num/10)*20, 30, 20);
+      console.log(ctx.fillStyle);
+      ctx.stroke();
+    }
   });
 }
