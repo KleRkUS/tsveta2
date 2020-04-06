@@ -13,4 +13,4 @@ app.use("/image", image);
 
 console.log("App is running on port "+port);
 
-app.listen(port);
+app.listen(process.env.PORT || port);
