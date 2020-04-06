@@ -97,7 +97,7 @@ function createNN() {
 async function nn(fr) {
 
   let load = new Promise(async (res, rej) => {
-    const model = await tf.loadLayersModel('http://127.0.0.1:8080/uploads/model.json');
+    const model = await tf.loadLayersModel('https://tsvetatest2.herokuapp.com/uploads/model.json');
     res(model);
   }).then(async (model) => {
  // const model = createNN();
