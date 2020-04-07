@@ -97,7 +97,7 @@ function createNN() {
 async function nn(fr) {
 
   let load = new Promise(async (res, rej) => {
-    const model = await tf.loadLayersModel('https://tsvetatest2.herokuapp.com/uploads/model.json');
+    const model = await tf.loadLayersModel('http://127.0.0.1:8080/uploads/model.json');
     res(model);
   }).then(async (model) => {
  // const model = createNN();
@@ -137,7 +137,7 @@ async function nn(fr) {
       epochs: 1000,
     }).then(async res => {
       console.log(res.history.loss);
-      const saveRes = await model.save('https://tsvetatest2.herokuapp.com/image/save').then((res) => {
+      const saveRes = await model.save('http://127.0.0.1:8080/image/save').then((res) => {
         console.log(res)
       });
     });
